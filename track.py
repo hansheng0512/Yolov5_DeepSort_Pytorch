@@ -1,3 +1,4 @@
+import cv2
 import sys
 sys.path.insert(0, './yolov5')
 
@@ -15,7 +16,6 @@ import platform
 import shutil
 import time
 from pathlib import Path
-import cv2
 import torch
 import torch.backends.cudnn as cudnn
 
