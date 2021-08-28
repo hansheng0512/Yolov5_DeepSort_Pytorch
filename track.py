@@ -162,8 +162,12 @@ def detect(opt):
             else:
                 deepsort.increment_ages()
 
+            # Calculate FPS
+            fps = 1/(t2 - t1)
+
             # Print time (inference + NMS)
-            print('%sDone. (%.3fs)' % (s, t2 - t1))
+            print('%sDone. (%.3fs) FPS: (%.3fs)' % (s, t2 - t1, fps))
+
 
             # Stream results
             if show_vid:
