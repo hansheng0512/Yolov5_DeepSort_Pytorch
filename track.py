@@ -19,6 +19,7 @@ import cv2
 import torch
 import torch.backends.cudnn as cudnn
 
+meta = {}
 
 def compute_color_for_id(label):
     """
@@ -132,6 +133,12 @@ def detect(opt):
 
                 # pass detections to deepsort
                 outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss, im0)
+                for output in outputs:
+
+                    if int(output[5] == 0) or int(output[5] == 2) or int(output[5] == 3):
+                        class_name = names[int(output[5])]
+                        count = int(output[4])
+                        meta[class_name] = count
                 
                 # draw boxes for visualization
                 if len(outputs) > 0:
@@ -169,7 +176,7 @@ def detect(opt):
                 cv2.imshow(p, im0)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
-
+                print(meta)
             # Save results (image with detections)
             if save_vid:
                 if vid_path != save_path:  # new video
@@ -180,7 +187,6 @@ def detect(opt):
                         fps = vid_cap.get(cv2.CAP_PROP_FPS)
                         w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                         h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-                        print(fps)
                     else:  # stream
                         fps, w, h = 30, im0.shape[1], im0.shape[0]
                         save_path += '.mp4'
