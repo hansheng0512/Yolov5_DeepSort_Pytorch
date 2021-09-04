@@ -93,6 +93,7 @@ def detect(opt):
     txt_path = str(Path(out)) + '/' + txt_file_name + '.txt'
 
     for frame_idx, (path, img, im0s, vid_cap) in enumerate(dataset):
+        t1 = time_synchronized()
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
         img /= 255.0  # 0 - 255 to 0.0 - 1.0
@@ -100,20 +101,17 @@ def detect(opt):
             img = img.unsqueeze(0)
 
         # Inference
-        t1 = time_synchronized()
+        # t1 = time_synchronized()
         pred = model(img, augment=opt.augment)[0]
 
         # Apply NMS
         pred = non_max_suppression(
             pred, opt.conf_thres, opt.iou_thres, classes=opt.classes, agnostic=opt.agnostic_nms)
-        t2 = time_synchronized()
+        # t2 = time_synchronized()
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
-            if webcam:  # batch_size >= 1
-                p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
-            else:
-                p, s, im0 = path, '', im0s
+            p, s, im0 = path[i], '%g: ' % i, im0s[i].copy()
 
             s += '%gx%g ' % img.shape[2:]  # print string
             save_path = str(Path(out) / Path(p).name)
@@ -162,8 +160,9 @@ def detect(opt):
             else:
                 deepsort.increment_ages()
 
+            t2 = time_synchronized()
             # Print time (inference + NMS)
-            print('%sDone. (%.3fs)' % (s, t2 - t1))
+            print('%sDone. (%.3fs) FPS: (%.3f)' % (s, t2 - t1, 1/(t2 - t1)))
 
             # Stream results
             if show_vid:
@@ -181,6 +180,7 @@ def detect(opt):
                         fps = vid_cap.get(cv2.CAP_PROP_FPS)
                         w = int(vid_cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                         h = int(vid_cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        print(fps)
                     else:  # stream
                         fps, w, h = 30, im0.shape[1], im0.shape[0]
                         save_path += '.mp4'
@@ -188,10 +188,10 @@ def detect(opt):
                     vid_writer = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                 vid_writer.write(im0)
 
-    if save_txt or save_vid:
-        print('Results saved to %s' % os.getcwd() + os.sep + out)
-        if platform == 'darwin':  # MacOS
-            os.system('open ' + save_path)
+    # if save_txt or save_vid:
+    #     print('Results saved to %s' % os.getcwd() + os.sep + out)
+    #     if platform == 'darwin':  # MacOS
+    #         os.system('open ' + save_path)
 
     print('Done. (%.3fs)' % (time.time() - t0))
 
