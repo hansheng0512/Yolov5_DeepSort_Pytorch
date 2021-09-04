@@ -1,6 +1,6 @@
+import cv2
 import sys
 sys.path.insert(0, './yolov5')
-
 from yolov5.utils.google_utils import attempt_download
 from yolov5.models.experimental import attempt_load
 from yolov5.utils.datasets import LoadImages, LoadStreams
@@ -15,7 +15,6 @@ import platform
 import shutil
 import time
 from pathlib import Path
-import cv2
 import torch
 import torch.backends.cudnn as cudnn
 
