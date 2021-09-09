@@ -19,6 +19,9 @@ import torch
 import torch.backends.cudnn as cudnn
 
 meta = {}
+meta["prev_people"] = 0 # 0
+meta["prev_car"] = 0 # 2
+meta["prev_motorcycle"] = 0 # 3
 
 def compute_color_for_id(label):
     """
@@ -132,13 +135,20 @@ def detect(opt):
 
                 # pass detections to deepsort
                 outputs = deepsort.update(xywhs.cpu(), confs.cpu(), clss, im0)
-                for output in outputs:
 
-                    if int(output[5] == 0) or int(output[5] == 2) or int(output[5] == 3):
-                        class_name = names[int(output[5])]
-                        count = int(output[4])
-                        meta[class_name] = count
-                
+                for output in outputs:
+                    if int(output[5] == 0): # people
+                        if meta["prev_people"] < int(output[4]):
+                            meta["prev_people"] = int(output[4])
+
+                    if int(output[5] == 2): # car
+                        if meta["prev_car"] < int(output[4]):
+                            meta["prev_car"] = int(output[4])
+
+                    if int(output[5] == 3): # motorcycle
+                        if meta["prev_motorcycle"] < int(output[4]):
+                            meta["prev_motorcycle"] = int(output[4])
+
                 # draw boxes for visualization
                 if len(outputs) > 0:
                     for j, (output, conf) in enumerate(zip(outputs, confs)): 
@@ -170,12 +180,14 @@ def detect(opt):
             # Print time (inference + NMS)
             print('%sDone. (%.3fs) FPS: (%.3f)' % (s, t2 - t1, 1/(t2 - t1)))
 
+            print(meta)
+            print("\n\n")
+
             # Stream results
             if show_vid:
                 cv2.imshow(p, im0)
                 if cv2.waitKey(1) == ord('q'):  # q to quit
                     raise StopIteration
-                print(meta)
             # Save results (image with detections)
             if save_vid:
                 if vid_path != save_path:  # new video
